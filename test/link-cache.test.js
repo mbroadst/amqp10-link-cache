@@ -27,7 +27,7 @@ describe('LinkCache', function() {
     { description: 'receiver links', method: 'createReceiver' }
   ].forEach(function(testCase) {
     it('should return cached ' + testCase.description, function() {
-      return test.client.connect('amqp://' + config.amqpServer)
+      return test.client.connect(config.address)
         .then(function() {
           return Promise.all([
             test.cache[testCase.method]('amq.topic'),
@@ -43,7 +43,7 @@ describe('LinkCache', function() {
     });
 
     it('should return different ' + testCase.description + ' based on address/options', function() {
-      return test.client.connect('amqp://' + config.amqpServer)
+      return test.client.connect(config.address)
         .then(function() {
           return Promise.all([
             test.cache[testCase.method]('amq.topic'),
