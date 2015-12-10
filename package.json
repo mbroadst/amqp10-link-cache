@@ -1,0 +1,35 @@
+{
+  "name": "amqp10-link-cache",
+  "version": "0.0.1",
+  "description": "a link caching mechanism for the amqp10 module",
+  "main": "index.js",
+  "engines": {
+    "node": ">= 0.10"
+  },
+  "keywords": [
+    "amqp10",
+    "link",
+    "cache",
+    "amqp",
+    "messaging"
+  ],
+  "author": {
+    "name": "Matt Broadstone",
+    "email": "mbroadst@gmail.com",
+    "url": "https://github.com/mbroadst"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mbroadst/amqp10-link-cache.git"
+  },
+  "dependencies": {
+    "object-hash": "^0.9.3"
+  },
+  "devDependencies": {
+    "amqp10": "^2.2.0",
+    "chai": "^3.3.0",
+    "jshint": "^2.6.0",
+    "mocha": "^2.1.0"
+  }
+}
