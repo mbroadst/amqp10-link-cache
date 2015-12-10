@@ -1,6 +1,7 @@
 'use strict';
 
-var LinkCache = require('../'),
+var Promise = require('bluebird'),
+    LinkCache = require('../'),
     AMQPClient = require('amqp10').Client,
     config = require('./config'),
     expect = require('chai').expect;
