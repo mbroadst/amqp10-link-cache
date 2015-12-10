@@ -24,6 +24,7 @@
     "url": "https://github.com/mbroadst/amqp10-link-cache.git"
   },
   "dependencies": {
+    "bluebird": "^3.0.6",
     "object-hash": "^0.9.3"
   },
   "devDependencies": {
