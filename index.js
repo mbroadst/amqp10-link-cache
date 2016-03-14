@@ -19,6 +19,14 @@ LinkCache.prototype.createReceiver = function(address, options) {
   return this._createLink(address, options, 'receiver', 'createReceiver');
 };
 
+LinkCache.prototype.createSenderStream = function(address, options) {
+  return this._createLink(address, options, 'senderStream', 'createSenderStream');
+};
+
+LinkCache.prototype.createReceiverStream = function(address, options) {
+  return this._createLink(address, options, 'receiverStream', 'createReceiverStream');
+};
+
 LinkCache.prototype._createLink = function(address, options, type, method) {
   var linkHash = hash({ type: type, address: address, options: options });
   if (this._links.hasOwnProperty(linkHash)) {

@@ -24,7 +24,9 @@ describe('LinkCache', function() {
 
   [
     { description: 'sender links', method: 'createSender' },
-    { description: 'receiver links', method: 'createReceiver' }
+    { description: 'receiver links', method: 'createReceiver' },
+    { description: 'sender streams', method: 'createSenderStream' },
+    { description: 'receiver streams', method: 'createReceiverStream' }
   ].forEach(function(testCase) {
     it('should return cached ' + testCase.description, function() {
       return test.client.connect(config.address)
