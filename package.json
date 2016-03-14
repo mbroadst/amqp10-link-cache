@@ -1,6 +1,6 @@
 {
   "name": "amqp10-link-cache",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "a link caching mechanism for the amqp10 module",
   "main": "index.js",
   "engines": {
