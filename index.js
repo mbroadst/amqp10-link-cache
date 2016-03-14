@@ -1,6 +1,5 @@
 'use strict';
-var Promise = require('bluebird'),
-    hash = require('object-hash');
+var hash = require('object-hash');
 
 function LinkCache(client, options) {
   options = options || {};
@@ -24,7 +23,7 @@ LinkCache.prototype._createLink = function(address, options, type, method) {
   var linkHash = hash({ type: type, address: address, options: options });
   if (this._links.hasOwnProperty(linkHash)) {
     var entry = this._links[linkHash];
-    if (entry instanceof Promise)
+    if (!entry.hasOwnProperty('link'))
       return entry;
 
     this._links[linkHash].stamp = Date.now();
