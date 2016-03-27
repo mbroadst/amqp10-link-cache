@@ -1,69 +1,48 @@
 'use strict';
-var hash = require('object-hash');
+var Promise = require('bluebird'),
+    hash = require('object-hash');
 
-function LinkCache(client, options) {
-  options = options || {};
-  this._client = client;
-  this._links = {};
-  this._ttl = options.ttl || 60000;
-  this._purgeTimeout = null;
+var links = {};
+var ttl = 60000;
+var purgeTimeout = null;
 
-  client.on('disconnected', function() {});
-}
-
-LinkCache.prototype.createSender = function(address, options) {
-  return this._createLink(address, options, 'sender', 'createSender');
-};
-
-LinkCache.prototype.createReceiver = function(address, options) {
-  return this._createLink(address, options, 'receiver', 'createReceiver');
-};
-
-LinkCache.prototype.createSenderStream = function(address, options) {
-  return this._createLink(address, options, 'senderStream', 'createSenderStream');
-};
-
-LinkCache.prototype.createReceiverStream = function(address, options) {
-  return this._createLink(address, options, 'receiverStream', 'createReceiverStream');
-};
-
-LinkCache.prototype._createLink = function(address, options, type, method) {
+function createLink(address, options, type, method) {
   var linkHash = hash({ type: type, address: address, options: options });
-  if (this._links.hasOwnProperty(linkHash)) {
-    var entry = this._links[linkHash];
+  if (links.hasOwnProperty(linkHash)) {
+    var entry = links[linkHash];
     if (!entry.hasOwnProperty('link'))
       return entry;
 
-    this._links[linkHash].stamp = Date.now();
-    return Promise.resolve(this._links[linkHash].link);
+    links[linkHash].stamp = Date.now();
+    return Promise.resolve(links[linkHash].link);
   }
 
-  var self = this;
-  var linkPromise = this._client[method](address, options)
+  var linkPromise = method(address, options)
     .then(function(link) {
       link.once('detached', function() {
-        if (self._links.hasOwnProperty(linkHash))
-          delete self._links[linkHash];
+        if (links.hasOwnProperty(linkHash))
+          delete links[linkHash];
       });
 
-      self._links[linkHash] = { link: link, stamp: Date.now() };
-      if (!self._purgeTimeout)
-        self._purgeTimeout = setTimeout(self._purgeLinks.bind(self), self._ttl);
+      links[linkHash] = { link: link, stamp: Date.now() };
+      if (!purgeTimeout)
+        purgeTimeout = setTimeout(purgeLinks, ttl);
       return link;
     });
 
 
-  this._links[linkHash] = linkPromise;
+  links[linkHash] = linkPromise;
   return linkPromise;
-};
+}
 
-LinkCache.prototype._purgeLinks = function() {
+function purgeLinks() {
   var now = Date.now();
-  var _keys = Object.keys(this._links),
+  var _keys = Object.keys(links),
       expired = [], live = 0;
 
+  purgeTimeout = null;
   for (var i = 0, ii = _keys.length; i < ii; ++i) {
-    if (now - this._links[_keys[i]].stamp >= this._ttl) {
+    if (now - links[_keys[i]].stamp >= ttl) {
       expired.push(_keys[i]);
     } else {
       live++;
@@ -71,14 +50,44 @@ LinkCache.prototype._purgeLinks = function() {
   }
 
   for (var j = 0, jj = expired.length; j < jj; ++j) {
-    var cacheEntry = this._links[expired[j]];
-    delete this._links[_keys[j]];
+    var cacheEntry = links[expired[j]];
+    delete links[expired[j]];
     cacheEntry.link.detach();
   }
 
-  if (live && !this._purgeTimeout) {
-    this._purgeTimeout = setTimeout(this._purgeLinks.bind(this), this._ttl);
+  if (live) {
+    purgeTimeout = setTimeout(purgeLinks, ttl);
   }
-};
+}
 
-module.exports = LinkCache;
+module.exports = function(options) {
+  // NOTE: we need to re-initialize these every time the plugin is called
+  options = options || {};
+  links = {};
+  ttl = options.ttl || 60000;
+  if (!!purgeTimeout) clearTimeout(purgeTimeout);
+  purgeTimeout = null;
+
+  return function(Client) {
+    var _createSender = Client.prototype.createSender,
+        _createReceiver = Client.prototype.createReceiver,
+        _createSenderStream = Client.prototype.createSenderStream,
+        _createReceiverStream = Client.prototype.createReceiverStream;
+
+    Client.prototype.createSender = function(address, options) {
+      return createLink(address, options, 'sender', _createSender.bind(this));
+    };
+
+    Client.prototype.createReceiver = function(address, options) {
+      return createLink(address, options, 'receiver', _createReceiver.bind(this));
+    };
+
+    Client.prototype.createSenderStream = function(address, options) {
+      return createLink(address, options, 'senderStream', _createSenderStream.bind(this));
+    };
+
+    Client.prototype.createReceiverStream = function(address, options) {
+      return createLink(address, options, 'receiverStream', _createReceiverStream.bind(this));
+    };
+  };
+};

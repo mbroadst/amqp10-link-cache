@@ -11,16 +11,16 @@ created or a cached copy will be returned.
 ## usage
 ```
 'use strict';
-var LinkCache = require('../'),
-    AMQPClient = require('amqp10').Client;
+var amqp = require('amqp'),
+    linkCache = require('amqp10-link-cache');
 
-var client = new AMQPClient();
+// plug-in the link cache, with optional parameters
+amqp.use(linkCache({ ttl: 5000 ));
+
+var client = new amqp.Client();
 client.connect('amqp://localhost')
-  .then(function() { return new LinkCache(client); });
-  .then(function(cache) {
-    // e.g. pass cache to all of your API endpoints _as_ the 'client'
-
-    return Promise.all([ cache.crateSender('amq.topic'), cache.crateSender('amq.topic') ]);
+  .then(function() {
+    return Promise.all([ client.crateSender('amq.topic'), client.crateSender('amq.topic') ]);
   })
   .spread(function(sender1, sender2) {
     // sender1 === sender2
