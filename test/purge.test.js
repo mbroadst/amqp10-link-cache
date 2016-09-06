@@ -7,9 +7,9 @@ var amqp = require('amqp10'),
 
 var test = {};
 describe('purging', function() {
-  before(function() { amqp.use(linkCache({ ttl: 10 })); });
   beforeEach(function() {
     if (!!test.client) delete test.client;
+    amqp.use(linkCache({ ttl: 10 }));
     test.client = new AMQPClient();
   });
 
@@ -41,4 +41,18 @@ describe('purging', function() {
       .tap(function(sender) { sender2 = sender; })
       .then(function() { expect(sender1).to.not.eql(sender2); });
   });
+
+  it('should not purge links that indicate they should bypass the cache', function() {
+    var sender;
+    return test.client.connect(config.address)
+      .then(function() { return test.client.createSender('amq.topic', { bypassCache: true }); })
+      .then(function(s) { sender = s; })
+      .delay(50)
+      .then(function() {
+        var state = sender.linkSM.getMachineState();
+        expect(state).to.equal('ATTACHED');
+        sender = null;
+      });
+  });
+
 });

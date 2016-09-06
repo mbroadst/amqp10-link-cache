@@ -7,6 +7,10 @@ var ttl = 60000;
 var purgeTimeout = null;
 
 function createLink(address, options, type, method) {
+  if (options && options.hasOwnProperty('bypassCache') && !!options.bypassCache) {
+    return method(address, options);
+  }
+
   var linkHash = hash({ type: type, address: address, options: options });
   if (links.hasOwnProperty(linkHash)) {
     var entry = links[linkHash];
@@ -29,7 +33,6 @@ function createLink(address, options, type, method) {
         purgeTimeout = setTimeout(purgeLinks, ttl);
       return link;
     });
-
 
   links[linkHash] = linkPromise;
   return linkPromise;
