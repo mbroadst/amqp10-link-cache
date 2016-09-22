@@ -57,4 +57,30 @@ describe('basic behavior', function() {
         });
     });
   });
+
+  it('should allow a user to bypass the link cache explicitly', function() {
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver('amq.topic'),
+          test.client.createReceiver('amq.topic', { bypassCache: true })
+        ]);
+      })
+      .spread(function(link1, link2) {
+        expect(link1).to.not.eql(link2);
+      });
+  });
+
+  it('should bypass the cache for dynamic links', function() {
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver(null, { attach: { source: { dynamic: true } } }),
+          test.client.createReceiver(null, { attach: { source: { dynamic: true } } })
+        ]);
+      })
+      .spread(function(link1, link2) {
+        expect(link1).to.not.eql(link2);
+      });
+  });
 });

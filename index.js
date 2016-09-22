@@ -7,6 +7,12 @@ var ttl = 60000;
 var purgeTimeout = null;
 
 function createLink(address, options, type, method) {
+  if (address === null) {
+    // for the case of dynamically created links, we always want to bypass
+    // the link cache
+    return method(address, options);
+  }
+
   if (options && options.hasOwnProperty('bypassCache') && !!options.bypassCache) {
     return method(address, options);
   }
