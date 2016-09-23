@@ -83,4 +83,17 @@ describe('basic behavior', function() {
         expect(link1).to.not.eql(link2);
       });
   });
+
+  it('should maintain link caches per-client', function() {
+    test.client2 = new AMQPClient();
+    return Promise.all([ test.client.connect(config.address), test.client2.connect(config.address) ])
+      .then(function() {
+        return Promise.all([
+          test.client.createReceiver('amq.topic'),
+          test.client2.createReceiver('amq.topic')
+        ]);
+      })
+      .spread(function(link1, link2) { expect(link1).to.not.eql(link2); })
+      .then(function() { delete test.client2; });
+  });
 });
