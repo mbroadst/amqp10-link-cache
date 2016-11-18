@@ -70,7 +70,9 @@ function purgeLinks(client) {
   }
 
   if (live) {
-    purgeTimeout = setTimeout(purgeLinks, ttl);
+    purgeTimeout = setTimeout(function() {
+      purgeLinks(client);
+    }, ttl);
   }
 }
 
