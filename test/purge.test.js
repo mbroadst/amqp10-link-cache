@@ -23,7 +23,7 @@ describe('purging', function() {
     return test.client.connect(config.address)
       .then(function() { return test.client.createSender('amq.topic'); })
       .then(function(s) { sender = s; })
-      .delay(50)
+      .delay(100)
       .then(function() {
         var state = sender.linkSM.getMachineState();
         expect(state).to.be.oneOf(['DETACHED', 'DETACHING']);
@@ -42,12 +42,26 @@ describe('purging', function() {
       .then(function() { expect(sender1).to.not.eql(sender2); });
   });
 
+  it('should pass the client into retry of purge checks', function() {
+    var sender1, sender2;
+    return test.client.connect(config.address)
+      .then(function() { return test.client.createSender('amq.fanout'); })
+      .tap(function(sender) {
+        test.client.links[Object.keys(test.client.links)[0]].stamp = Date.now() + 10;
+        sender1 = sender;
+      })
+      .delay(100)
+      .then(function() { return test.client.createSender('amq.fanout'); })
+      .tap(function(sender) { sender2 = sender; })
+      .then(function() { expect(sender1).to.not.eql(sender2); });
+  });
+
   it('should not purge links that indicate they should bypass the cache', function() {
     var sender;
     return test.client.connect(config.address)
       .then(function() { return test.client.createSender('amq.topic', { bypassCache: true }); })
       .then(function(s) { sender = s; })
-      .delay(50)
+      .delay(100)
       .then(function() {
         var state = sender.linkSM.getMachineState();
         expect(state).to.equal('ATTACHED');
