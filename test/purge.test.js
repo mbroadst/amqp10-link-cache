@@ -69,4 +69,29 @@ describe('purging', function() {
       });
   });
 
+  it('should not purge links that indicate they should bypass purge', function() {
+    var sender;
+    return test.client.connect(config.address)
+      .then(function() { return test.client.createSender('amq.topic', { bypassPurge: true }); })
+      .then(function(s) { sender = s; })
+      .delay(100)
+      .then(function() {
+        var state = sender.linkSM.getMachineState();
+        expect(state).to.equal('ATTACHED');
+        sender = null;
+      });
+  });
+
+  it('should not purge receiver links by default', function() {
+    var receiver;
+    return test.client.connect(config.address)
+      .then(function() { return test.client.createReceiver('amq.topic'); })
+      .then(function(r) { receiver = r; })
+      .delay(100)
+      .then(function() {
+        var state = receiver.linkSM.getMachineState();
+        expect(state).to.equal('ATTACHED');
+        receiver = null;
+      });
+  });
 });
