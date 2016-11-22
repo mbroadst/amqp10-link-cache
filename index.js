@@ -12,9 +12,16 @@ function createLink(client, address, options, type, method) {
     return method(address, options);
   }
 
-  if (options && options.hasOwnProperty('bypassCache') &&
-      !!options.bypassCache) {
+  if(!options){
+    options = {};
+  }
+
+  if (options.hasOwnProperty('bypassCache') && !!options.bypassCache) {
     return method(address, options);
+  }
+  if (!options.hasOwnProperty('bypassPurge')
+      && (type === 'receiver' || type === 'receiverStream')) {
+    options.bypassPurge = true;
   }
 
   var linkHash = hash({ type: type, address: address, options: options });
@@ -35,10 +42,12 @@ function createLink(client, address, options, type, method) {
       });
 
       client.links[linkHash] = { link: link, stamp: Date.now() };
-      if (!purgeTimeout)
+      if (!purgeTimeout &&
+          !(options.hasOwnProperty('bypassPurge') && !!options.bypassPurge)){
         purgeTimeout = setTimeout(function() {
           purgeLinks(client);
         }, ttl);
+      }
       return link;
     });
 
