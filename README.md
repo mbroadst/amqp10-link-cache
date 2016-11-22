@@ -9,18 +9,25 @@ _always_ create the links where you need them and know that it will either be
 created or a cached copy will be returned.
 
 ## usage
-```
+```javascript
 'use strict';
 var amqp = require('amqp'),
     linkCache = require('amqp10-link-cache');
 
+// defaults
+var options = {
+  ttl: 60000,             // ttl in ms
+  cacheReceiver: true,    // set to 'false' to disable caching receiver
+  cacheSender: true       // or sender
+}
+
 // plug-in the link cache, with optional parameters
-amqp.use(linkCache({ ttl: 5000 ));
+amqp.use(linkCache(options));
 
 var client = new amqp.Client();
 client.connect('amqp://localhost')
   .then(function() {
-    return Promise.all([ client.crateSender('amq.topic'), client.crateSender('amq.topic') ]);
+    return Promise.all([ client.createSender('amq.topic'), client.createSender('amq.topic') ]);
   })
   .spread(function(sender1, sender2) {
     // sender1 === sender2
