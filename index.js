@@ -50,6 +50,7 @@ function purgeLinks(client) {
   if (!client || !{}.hasOwnProperty.call(client, 'links')) {
     return;
   }
+
   var now = Date.now();
   var _keys = Object.keys(client.links),
       expired = [], live = 0;
@@ -70,7 +71,7 @@ function purgeLinks(client) {
   }
 
   if (live) {
-    purgeTimeout = setTimeout(purgeLinks, ttl);
+    purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
   }
 }
 
