@@ -27,7 +27,7 @@ amqp.use(linkCache(options));
 var client = new amqp.Client();
 client.connect('amqp://localhost')
   .then(function() {
-    return Promise.all([ client.crateSender('amq.topic'), client.crateSender('amq.topic') ]);
+    return Promise.all([ client.createSender('amq.topic'), client.createSender('amq.topic') ]);
   })
   .spread(function(sender1, sender2) {
     // sender1 === sender2
