@@ -59,7 +59,6 @@ function purgeLinks(client) {
   if (!client || !{}.hasOwnProperty.call(client, 'links')) {
     return;
   }
-
   var now = Date.now();
   var _keys = Object.keys(client.links),
       expired = [], live = 0;
@@ -80,7 +79,9 @@ function purgeLinks(client) {
   }
 
   if (live) {
-    purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
+    purgeTimeout = setTimeout(function() {
+      purgeLinks(client);
+    }, ttl);
   }
 }
 
@@ -88,6 +89,11 @@ module.exports = function(options) {
   // NOTE: we need to re-initialize these every time the plugin is called
   options = options || {};
   ttl = options.ttl || 60000;
+
+  var cacheSender, cacheReceiver;
+  cacheSender = options.cacheSender || true;
+  cacheReceiver = options.cacheReceiver || true;
+
   if (!!purgeTimeout) clearTimeout(purgeTimeout);
   purgeTimeout = null;
 
@@ -103,28 +109,32 @@ module.exports = function(options) {
       }
     };
 
-    Client.prototype.createSender = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'sender',
-                        _createSender.bind(this));
-    };
+    if (cacheSender) {
+      Client.prototype.createSender = function (address, options) {
+        init(this);
+        return createLink(this, address, options, 'sender',
+          _createSender.bind(this));
+      };
 
-    Client.prototype.createReceiver = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'receiver',
-                        _createReceiver.bind(this));
-    };
+      Client.prototype.createSenderStream = function (address, options) {
+        init(this);
+        return createLink(this, address, options, 'senderStream',
+          _createSenderStream.bind(this));
+      };
+    }
 
-    Client.prototype.createSenderStream = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'senderStream',
-                        _createSenderStream.bind(this));
-    };
+    if (cacheReceiver) {
+      Client.prototype.createReceiver = function (address, options) {
+        init(this);
+        return createLink(this, address, options, 'receiver',
+          _createReceiver.bind(this));
+      };
 
-    Client.prototype.createReceiverStream = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'receiverStream',
-                        _createReceiverStream.bind(this));
-    };
+      Client.prototype.createReceiverStream = function (address, options) {
+        init(this);
+        return createLink(this, address, options, 'receiverStream',
+          _createReceiverStream.bind(this));
+      };
+    }
   };
 };
