@@ -6,6 +6,9 @@
   "engines": {
     "node": ">= 0.10"
   },
+  "scripts": {
+    "version": "make changelog && git add CHANGELOG.md"
+  },
   "keywords": [
     "amqp10",
     "link",
@@ -30,6 +33,7 @@
   "devDependencies": {
     "amqp10": "^3.1.1",
     "chai": "^3.5.0",
+    "conventional-changelog-cli": "^1.2.0",
     "jshint": "^2.9.1",
     "mocha": "^2.4.5"
   }
