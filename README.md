@@ -11,7 +11,7 @@ created or a cached copy will be returned.
 ## usage
 ```javascript
 'use strict';
-var amqp = require('amqp'),
+var amqp = require('amqp10'),
     linkCache = require('amqp10-link-cache');
 
 // plug-in the link cache, with optional parameters
@@ -22,14 +22,14 @@ client.connect('amqp://localhost')
   .then(function() {
     // defaults for sender:
     var senderOpts = {
-      bypassPurge: false      // set to true to disable purging after ttl
+      bypassPurge: false,      // set to true to disable purging after ttl
       bypassCache: false      // set to true to disable caching this link
     };
 
     // defaults for receiver:
     var receiverOpts = {
-      bypassPurge: true      // receivers will bypass purge by default
-      bypassCache: false   
+      bypassPurge: true,      // receivers will bypass purge by default
+      bypassCache: false
     };
 
     return Promise.all([
