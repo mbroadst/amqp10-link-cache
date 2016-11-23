@@ -28,7 +28,7 @@ client.connect('amqp://localhost')
 
     // defaults for receiver:
     var receiverOpts = {
-      bypassPurge: true      // senders will bypass purge by default
+      bypassPurge: true      // receivers will bypass purge by default
       bypassCache: false   
     };
 
