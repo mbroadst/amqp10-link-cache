@@ -12,23 +12,23 @@ function createLink(client, address, options, type, method) {
     return method(address, options);
   }
 
-  if(!options){
-    options = {};
-  }
-
+  options = options || {};
   if (options.hasOwnProperty('bypassCache') && !!options.bypassCache) {
     return method(address, options);
   }
-  if (!options.hasOwnProperty('bypassPurge')
-      && (type === 'receiver' || type === 'receiverStream')) {
-    options.bypassPurge = true;
+
+  if (!options.hasOwnProperty('bypassPurge')) {
+    options.bypassPurge =
+      (type === 'receiver' || type === 'receiverStream') ? true : false;
   }
 
   var linkHash = hash({ type: type, address: address, options: options });
   if (client.links.hasOwnProperty(linkHash)) {
     var entry = client.links[linkHash];
-    if (!entry.hasOwnProperty('link'))
+    if (!entry.hasOwnProperty('link')) {
+      // NOTE: this returns an existing Promise for the link
       return entry;
+    }
 
     client.links[linkHash].stamp = Date.now();
     return Promise.resolve(client.links[linkHash].link);
@@ -42,12 +42,10 @@ function createLink(client, address, options, type, method) {
       });
 
       client.links[linkHash] = { link: link, stamp: Date.now() };
-      if (!purgeTimeout &&
-          !(options.hasOwnProperty('bypassPurge') && !!options.bypassPurge)){
-        purgeTimeout = setTimeout(function() {
-          purgeLinks(client);
-        }, ttl);
+      if (!purgeTimeout && !options.bypassPurge) {
+        purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
       }
+
       return link;
     });
 
