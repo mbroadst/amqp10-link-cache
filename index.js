@@ -13,13 +13,13 @@ function createLink(client, address, options, type, method) {
   }
 
   options = options || {};
-  if (options.hasOwnProperty('bypassCache') && !!options.bypassCache) {
-    return method(address, options);
+  if (!options.hasOwnProperty('bypassCache')) {
+    options.bypassCache =
+      (type === 'receiver' || type === 'receiverStream') ? true : false;
   }
 
-  if (!options.hasOwnProperty('bypassPurge')) {
-    options.bypassPurge =
-      (type === 'receiver' || type === 'receiverStream') ? true : false;
+  if (!!options.bypassCache) {
+    return method(address, options);
   }
 
   var linkHash = hash({ type: type, address: address, options: options });
@@ -42,7 +42,7 @@ function createLink(client, address, options, type, method) {
       });
 
       client.links[linkHash] = { link: link, stamp: Date.now() };
-      if (!purgeTimeout && !options.bypassPurge) {
+      if (!purgeTimeout) {
         purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
       }
 
