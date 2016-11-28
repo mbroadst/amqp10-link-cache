@@ -1,3 +1,20 @@
+<a name="1.2.1"></a>
+## [1.2.1](https://github.com/mbroadst/amqp10-link-cache/compare/v1.0.2...v1.2.1) (2016-11-28)
+
+
+### Bug Fixes
+
+* **link-cache:** always bypass cache for dynamic links ([9c46497](https://github.com/mbroadst/amqp10-link-cache/commit/9c46497))
+* **purge:** pass in `client` to purgeLinks ([ab05f95](https://github.com/mbroadst/amqp10-link-cache/commit/ab05f95))
+* **readme:** typo in readme options and example ([3a2ccf1](https://github.com/mbroadst/amqp10-link-cache/commit/3a2ccf1))
+
+
+### Features
+
+* **purge:** allow users to bypass purge ([acdeb27](https://github.com/mbroadst/amqp10-link-cache/commit/acdeb27))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/mbroadst/amqp10-link-cache/compare/v1.0.2...v1.2.0) (2016-11-23)
 
