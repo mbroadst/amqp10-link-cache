@@ -25,9 +25,9 @@ function createLink(client, address, options, type, method) {
   }
 
   var linkHash = hash({ type: type, address: address, options: options });
-  if ({}.hasOwnProperty.call(client.links, linkHash)) {
+  if (client.links.hasOwnProperty(linkHash)) {
     var entry = client.links[linkHash];
-    if (!{}.hasOwnProperty.call(entry, 'link'))
+    if (!entry.hasOwnProperty('link'))
       return entry;
 
     client.links[linkHash].stamp = Date.now();
@@ -37,7 +37,7 @@ function createLink(client, address, options, type, method) {
   var linkPromise = method(address, options)
     .then(function(link) {
       link.once('detached', function() {
-        if ({}.hasOwnProperty.call(client.links, linkHash))
+        if (client.links.hasOwnProperty(linkHash))
           delete client.links[linkHash];
       });
 
@@ -56,7 +56,7 @@ function createLink(client, address, options, type, method) {
 }
 
 function purgeLinks(client) {
-  if (!client || !{}.hasOwnProperty.call(client, 'links')) {
+  if (!client || !client.hasOwnProperty('links')) {
     return;
   }
 
@@ -84,6 +84,10 @@ function purgeLinks(client) {
   }
 }
 
+function moduleInit(client) {
+  if (!client.hasOwnProperty('links')) client.links = {};
+}
+
 module.exports = function(options) {
   // NOTE: we need to re-initialize these every time the plugin is called
   options = options || {};
@@ -97,34 +101,24 @@ module.exports = function(options) {
         _createSenderStream = Client.prototype.createSenderStream,
         _createReceiverStream = Client.prototype.createReceiverStream;
 
-    var init = function(client) {
-      if (!{}.hasOwnProperty.call(client, 'links')) {
-        client.links = {};
-      }
-    };
-
     Client.prototype.createSender = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'sender',
-                        _createSender.bind(this));
+      moduleInit(this);
+      return createLink(this, address, options, 'sender', _createSender.bind(this));
     };
 
     Client.prototype.createReceiver = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'receiver',
-                        _createReceiver.bind(this));
+      moduleInit(this);
+      return createLink(this, address, options, 'receiver', _createReceiver.bind(this));
     };
 
     Client.prototype.createSenderStream = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'senderStream',
-                        _createSenderStream.bind(this));
+      moduleInit(this);
+      return createLink(this, address, options, 'senderStream', _createSenderStream.bind(this));
     };
 
     Client.prototype.createReceiverStream = function(address, options) {
-      init(this);
-      return createLink(this, address, options, 'receiverStream',
-                        _createReceiverStream.bind(this));
+      moduleInit(this);
+      return createLink(this, address, options, 'receiverStream', _createReceiverStream.bind(this));
     };
   };
 };
