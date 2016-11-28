@@ -8,6 +8,9 @@ need to make all of the links up front before using them, you can simply
 _always_ create the links where you need them and know that it will either be
 created or a cached copy will be returned.
 
+By default receiver links are _not_ cached, the user must explicitly opt in to
+this behavior for both receiver links and receiver streams.
+
 ## usage
 ```javascript
 'use strict';
@@ -22,26 +25,28 @@ client.connect('amqp://localhost')
   .then(function() {
     // defaults for sender:
     var senderOpts = {
-      bypassPurge: false,      // set to true to disable purging after ttl
       bypassCache: false      // set to true to disable caching this link
     };
 
     // defaults for receiver:
     var receiverOpts = {
-      bypassPurge: true,      // receivers will bypass purge by default
-      bypassCache: false
+      bypassCache: true
     };
 
     return Promise.all([
       client.createSender('amq.topic', senderOpts),
       client.createSender('amq.topic'),
+      client.createSender('amq.topic', { bypassCache: true }),
       client.createReceiver('amqp.topic', receiverOpts),
       client.createReceiver('amqp.topic'),
-      client.createReceiver('amqp.topic', { bypassCache: true })
+      client.createReceiver('amq.topic', { bypassCache: false }),
+      client.createReceiver('amq.topic', { bypassCache: false })
     ]);
   })
-  .spread(function(sender1, sender2, rec1, rec2, rec3) {
+  .spread(function(sender1, sender2, sender3, receiver1, receiver2, receiver3, receiver4) {
     // sender1 === sender2
-    // rec1 === rec2 !== rec3
+    // sender1 !== sender3 && sender2 !== sender3
+    // receiver1 !== receiver2
+    // receiver3 === receiver4
   });
 ```

@@ -21,17 +21,18 @@ describe('basic behavior', function() {
 
   [
     { description: 'sender links', method: 'createSender' },
-    { description: 'receiver links', method: 'createReceiver' },
+    { description: 'receiver links', method: 'createReceiver', options: { bypassCache: false } },
     { description: 'sender streams', method: 'createSenderStream' },
-    { description: 'receiver streams', method: 'createReceiverStream' }
+    { description: 'receiver streams', method: 'createReceiverStream', options: { bypassCache: false } }
   ].forEach(function(testCase) {
     it('should return cached ' + testCase.description, function() {
+      var options = testCase.options || {};
       return test.client.connect(config.address)
         .then(function() {
           return Promise.all([
-            test.client[testCase.method]('amq.topic'),
-            test.client[testCase.method]('amq.topic'),
-            test.client[testCase.method]('amq.topic')
+            test.client[testCase.method]('amq.topic', options),
+            test.client[testCase.method]('amq.topic', options),
+            test.client[testCase.method]('amq.topic', options)
           ]);
         })
         .spread(function(link1, link2, link3) {
@@ -42,12 +43,16 @@ describe('basic behavior', function() {
     });
 
     it('should return different ' + testCase.description + ' based on address/options', function() {
+      var options = testCase.options || {};
+      var attachOptions = options;
+      attachOptions.attach = { receiverSettleMode: false };
+
       return test.client.connect(config.address)
         .then(function() {
           return Promise.all([
             test.client[testCase.method]('amq.topic'),
-            test.client[testCase.method]('amq.topic', { attach: { receiverSettleMode: false } }),
-            test.client[testCase.method]('amq.topic/testing')
+            test.client[testCase.method]('amq.topic', attachOptions),
+            test.client[testCase.method]('amq.topic/testing', options)
           ]);
         })
         .spread(function(link1, link2, link3) {
@@ -62,8 +67,8 @@ describe('basic behavior', function() {
     return test.client.connect(config.address)
       .then(function() {
         return Promise.all([
-          test.client.createReceiver('amq.topic'),
-          test.client.createReceiver('amq.topic', { bypassCache: true })
+          test.client.createSender('amq.topic'),
+          test.client.createSender('amq.topic', { bypassCache: true })
         ]);
       })
       .spread(function(link1, link2) {
@@ -89,8 +94,8 @@ describe('basic behavior', function() {
     return Promise.all([ test.client.connect(config.address), test.client2.connect(config.address) ])
       .then(function() {
         return Promise.all([
-          test.client.createReceiver('amq.topic'),
-          test.client2.createReceiver('amq.topic')
+          test.client.createSender('amq.topic'),
+          test.client2.createSender('amq.topic')
         ]);
       })
       .spread(function(link1, link2) { expect(link1).to.not.eql(link2); })
