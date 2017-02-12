@@ -22,6 +22,11 @@ function createLink(client, address, options, type, method) {
     return method(address, options);
   }
 
+
+  if (!client.isAllowedToReturnNewLinks){
+    return Promise.reject(new Error('Not allowed to create link because connection is maybe reconnecting'))
+  }
+
   var linkHash = hash({ type: type, address: address, options: options });
   if (client.links.hasOwnProperty(linkHash)) {
     var entry = client.links[linkHash];
@@ -36,7 +41,13 @@ function createLink(client, address, options, type, method) {
 
   var linkPromise = method(address, options)
     .then(function(link) {
-      link.once('detached', function() {
+      link.once('detached', function(result) {
+        console.log(result);
+        if (result.error && result.error.condition =='amqp:link:detach-forced' && result.closed){
+          client.isAllowedToReturnNewLinks = false;
+        }
+
+
         if (client.links.hasOwnProperty(linkHash))
           delete client.links[linkHash];
       });
@@ -84,6 +95,12 @@ function purgeLinks(client) {
 
 function moduleInit(client) {
   if (!client.hasOwnProperty('links')) client.links = {};
+  if (!client.hasOwnProperty('isAllowedToReturnNewLinks')){
+    client.isAllowedToReturnNewLinks = true;
+    client.on("connected", function(){
+      client.isAllowedToReturnNewLinks  = true;
+    })
+  }
 }
 
 module.exports = function(options) {
