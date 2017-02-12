@@ -1,6 +1,6 @@
 'use strict';
 var Promise = require('bluebird'),
-    hash = require('object-hash');
+  hash = require('object-hash');
 
 var ttl = 60000;
 var purgeTimeout = null;
@@ -23,7 +23,7 @@ function createLink(client, address, options, type, method) {
   }
 
 
-  if (!client.isAllowedToReturnNewLinks){
+  if (!client.isAllowedToReturnNewLinks) {
     return Promise.reject(new Error('Not allowed to create link because connection is maybe reconnecting'))
   }
 
@@ -40,13 +40,11 @@ function createLink(client, address, options, type, method) {
   }
 
   var linkPromise = method(address, options)
-    .then(function(link) {
-      link.once('detached', function(result) {
-        console.log(result);
-        if (result.error && result.error.condition =='amqp:link:detach-forced' && result.closed){
+    .then(function (link) {
+      link.once('detached', function (result) {
+        if (result.error && result.error.condition == 'amqp:link:detach-forced' && result.closed) {
           client.isAllowedToReturnNewLinks = false;
         }
-
 
         if (client.links.hasOwnProperty(linkHash))
           delete client.links[linkHash];
@@ -54,7 +52,7 @@ function createLink(client, address, options, type, method) {
 
       client.links[linkHash] = { link: link, stamp: Date.now() };
       if (!purgeTimeout) {
-        purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
+        purgeTimeout = setTimeout(function () { purgeLinks(client); }, ttl);
       }
 
       return link;
@@ -71,7 +69,7 @@ function purgeLinks(client) {
 
   var now = Date.now();
   var _keys = Object.keys(client.links),
-      expired = [], live = 0;
+    expired = [], live = 0;
 
   purgeTimeout = null;
   for (var i = 0, ii = _keys.length; i < ii; ++i) {
@@ -89,49 +87,49 @@ function purgeLinks(client) {
   }
 
   if (live) {
-    purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
+    purgeTimeout = setTimeout(function () { purgeLinks(client); }, ttl);
   }
 }
 
 function moduleInit(client) {
   if (!client.hasOwnProperty('links')) client.links = {};
-  if (!client.hasOwnProperty('isAllowedToReturnNewLinks')){
+  if (!client.hasOwnProperty('isAllowedToReturnNewLinks')) {
     client.isAllowedToReturnNewLinks = true;
-    client.on("connected", function(){
-      client.isAllowedToReturnNewLinks  = true;
+    client.on("connected", function () {
+      client.isAllowedToReturnNewLinks = true;
     })
   }
 }
 
-module.exports = function(options) {
+module.exports = function (options) {
   // NOTE: we need to re-initialize these every time the plugin is called
   options = options || {};
   ttl = options.ttl || 60000;
   if (!!purgeTimeout) clearTimeout(purgeTimeout);
   purgeTimeout = null;
 
-  return function(Client) {
+  return function (Client) {
     var _createSender = Client.prototype.createSender,
-        _createReceiver = Client.prototype.createReceiver,
-        _createSenderStream = Client.prototype.createSenderStream,
-        _createReceiverStream = Client.prototype.createReceiverStream;
+      _createReceiver = Client.prototype.createReceiver,
+      _createSenderStream = Client.prototype.createSenderStream,
+      _createReceiverStream = Client.prototype.createReceiverStream;
 
-    Client.prototype.createSender = function(address, options) {
+    Client.prototype.createSender = function (address, options) {
       moduleInit(this);
       return createLink(this, address, options, 'sender', _createSender.bind(this));
     };
 
-    Client.prototype.createReceiver = function(address, options) {
+    Client.prototype.createReceiver = function (address, options) {
       moduleInit(this);
       return createLink(this, address, options, 'receiver', _createReceiver.bind(this));
     };
 
-    Client.prototype.createSenderStream = function(address, options) {
+    Client.prototype.createSenderStream = function (address, options) {
       moduleInit(this);
       return createLink(this, address, options, 'senderStream', _createSenderStream.bind(this));
     };
 
-    Client.prototype.createReceiverStream = function(address, options) {
+    Client.prototype.createReceiverStream = function (address, options) {
       moduleInit(this);
       return createLink(this, address, options, 'receiverStream', _createReceiverStream.bind(this));
     };
