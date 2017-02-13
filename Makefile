@@ -7,7 +7,7 @@ TESTS = ./test
 NPM_BIN = ./node_modules/.bin
 
 jshint:
-	$(NPM_BIN)/jshint index.js test
+	$(NPM_BIN)/jshint index.js errors.js test
 
 test: jshint
 	$(NPM_BIN)/mocha --globals setImmediate,clearImmediate --recursive --check-leaks --colors -t 10000 --reporter $(REPORTER) $(TESTS) $(GREPARG)

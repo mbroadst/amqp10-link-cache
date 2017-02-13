@@ -1,5 +1,6 @@
 'use strict';
 var Promise = require('bluebird'),
+  errors = require('./errors'),
   hash = require('object-hash');
 
 var ttl = 60000;
@@ -22,9 +23,8 @@ function createLink(client, address, options, type, method) {
     return method(address, options);
   }
 
-
   if (!client.isAllowedToReturnNewLinks) {
-    return Promise.reject(new Error('Not allowed to create link because connection is maybe reconnecting'))
+    return Promise.reject(new errors.InReconnectingStateError());
   }
 
   var linkHash = hash({ type: type, address: address, options: options });
@@ -42,7 +42,7 @@ function createLink(client, address, options, type, method) {
   var linkPromise = method(address, options)
     .then(function (link) {
       link.once('detached', function (result) {
-        if (result.error && result.error.condition == 'amqp:link:detach-forced' && result.closed) {
+        if (result.error && result.error.condition === 'amqp:link:detach-forced' && result.closed) {
           client.isAllowedToReturnNewLinks = false;
         }
 
@@ -97,7 +97,7 @@ function moduleInit(client) {
     client.isAllowedToReturnNewLinks = true;
     client.on("connected", function () {
       client.isAllowedToReturnNewLinks = true;
-    })
+    });
   }
 }
 
