@@ -37,8 +37,9 @@ function createLink(client, address, options, type, method) {
   var linkPromise = method(address, options)
     .then(function(link) {
       link.once('detached', function() {
-        if (client.links.hasOwnProperty(linkHash))
-          delete client.links[linkHash];
+        if (!canReattach(client,type)){
+              delete client.links[linkHash];
+         }
       });
 
       client.links[linkHash] = { link: link, stamp: Date.now() };
@@ -80,6 +81,17 @@ function purgeLinks(client) {
   if (live) {
     purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
   }
+}
+
+function canReattach(client, type){
+  if (type === 'sender' || type==='senderStream'){
+      return client.policy.senderLink.reattach !== null;
+  }
+  else if (type === 'receiver' || type ==="receiverStream"){
+    return client.policy.receiverLink.reattach !== null;
+  }
+
+  return false;
 }
 
 function moduleInit(client) {
