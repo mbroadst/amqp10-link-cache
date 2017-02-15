@@ -36,12 +36,12 @@ function createLink(client, address, options, type, method) {
 
   var linkPromise = method(address, options)
     .then(function(link) {
-      link.once('detached', function() {
-        if (client.links.hasOwnProperty(linkHash))
-          delete client.links[linkHash];
-      });
-
       client.links[linkHash] = { link: link, stamp: Date.now() };
+
+      if (!canReattach(link)) {
+        link.once('detached', function hashDetached() { delete client.links[linkHash]; });
+      }
+
       if (!purgeTimeout) {
         purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
       }
@@ -80,6 +80,11 @@ function purgeLinks(client) {
   if (live) {
     purgeTimeout = setTimeout(function() { purgeLinks(client); }, ttl);
   }
+}
+
+function canReattach(link) {
+  if (typeof link.policy === 'undefined') return true;
+  return link.policy.reattach !== false;
 }
 
 function moduleInit(client) {

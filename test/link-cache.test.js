@@ -6,6 +6,11 @@ var Promise = require('bluebird'),
     config = require('./config'),
     expect = require('chai').expect;
 
+function listenerNames(emitter, eventName) {
+  return emitter.listeners(eventName)
+    .map(function(f) { return f.hasOwnProperty('listener') ? f.listener.name : f.name; });
+}
+
 var test = {};
 describe('basic behavior', function() {
   before(function() { amqp.use(linkCache()); });
@@ -100,5 +105,35 @@ describe('basic behavior', function() {
       })
       .spread(function(link1, link2) { expect(link1).to.not.eql(link2); })
       .then(function() { delete test.client2; });
+  });
+
+  it('should not listen for `deatched` events if link is configured for reattach', function() {
+    test.client2 = new AMQPClient();
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createSender('amq.topic'),
+          test.client.createReceiver('amq.topic', { bypassCache: false })
+        ]);
+      })
+      .spread(function(sender, receiver) {
+        expect(listenerNames(sender, 'detached')).to.not.include('hashDetached');
+        expect(listenerNames(receiver, 'detached')).to.not.include('hashDetached');
+      });
+  });
+
+  it('should listen for `deatched` events if link is not configured for reattach', function() {
+    test.client2 = new AMQPClient();
+    return test.client.connect(config.address)
+      .then(function() {
+        return Promise.all([
+          test.client.createSender('amq.topic', { reattach: false }),
+          test.client.createReceiver('amq.topic', { bypassCache: false, reattach: false })
+        ]);
+      })
+      .spread(function(sender, receiver) {
+        expect(listenerNames(sender, 'detached')).to.include('hashDetached');
+        expect(listenerNames(receiver, 'detached')).to.include('hashDetached');
+      });
   });
 });
