@@ -1,3 +1,8 @@
+<a name="1.2.2"></a>
+## [1.2.2](https://github.com/mbroadst/amqp10-link-cache/compare/v1.2.1...v1.2.2) (2017-02-24)
+
+
+
 <a name="1.2.1"></a>
 ## [1.2.1](https://github.com/mbroadst/amqp10-link-cache/compare/v1.0.2...v1.2.1) (2016-11-28)
 
